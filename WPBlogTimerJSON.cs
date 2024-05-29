@@ -90,6 +90,14 @@ namespace az_tw_me_wpblogJSON_CDN
                     foreach (var post in posts)
                     {
                         var blobClient = containerClient.GetBlobClient($"{post.Id}.json");
+
+                        // Check if the blob already exists
+                        if (await blobClient.ExistsAsync())
+                        {
+                            _logger.LogInformation($"Post with ID {post.Id} already exists in blob storage. Skipping...");
+                            continue;
+                        }
+
                         var postJson = JsonSerializer.Serialize(post);
                         await blobClient.UploadAsync(new BinaryData(postJson));
                     }

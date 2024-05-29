@@ -70,7 +70,8 @@ namespace az_tw_me_wpblogJSON_CDN
 
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Get, "http://blog-terencewaters-com.ibrave.host/wp-json/wp/v2/posts");
+                string APIURL = Environment.GetEnvironmentVariable("WP_BLOG_API_URL") ?? string.Empty;
+                var request = new HttpRequestMessage(HttpMethod.Get, APIURL);
                 var response = await client.SendAsync(request);
 
                 // if we get a response, continue
@@ -80,8 +81,8 @@ namespace az_tw_me_wpblogJSON_CDN
                     var posts = JsonSerializer.Deserialize<List<Post>>(responseContent);
 
                     // Environment variables
-                    string blobContainer = Environment.GetEnvironmentVariable("BLOB_CONTAINER");5
-                    string connectionString = Environment.GetEnvironmentVariable("AZURE_WEB_JOBS_STORAGE");
+                    string blobContainer = Environment.GetEnvironmentVariable("BLOB_CONTAINER") ?? string.Empty;
+                    string connectionString = Environment.GetEnvironmentVariable("AZURE_WEB_JOBS_STORAGE") ?? string.Empty;
 
                     // Connect to Azure Storage
                     BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);

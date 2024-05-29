@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "az_tw_me_wpblogJSON_CDN": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7010",
+      "launchBrowser": false
+    }
+  }
+}

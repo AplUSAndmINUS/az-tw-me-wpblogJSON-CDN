@@ -78,9 +78,13 @@ namespace az_tw_me_wpblogJSON_CDN
                     var responseContent = await response.Content.ReadAsStringAsync();
                     var posts = JsonSerializer.Deserialize<List<Post>>(responseContent);
 
+                    // Environment variables
+                    string blobContainer = Environment.GetEnvironmentVariable("BLOB_CONTAINER");5
+                    string connectionString = Environment.GetEnvironmentVariable("AZURE_WEB_JOBS_STORAGE");
+
                     // Connect to Azure Storage
-                    BlobServiceClient blobServiceClient = new BlobServiceClient("<your_connection_string>");
-                    BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("<your_container_name>");
+                    BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
+                    BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(blobContainer);
 
                     // Upload data to Azure Storage
                     foreach (var post in posts)

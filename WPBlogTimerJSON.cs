@@ -73,6 +73,7 @@ namespace az_tw_me_wpblogJSON_CDN
                 var request = new HttpRequestMessage(HttpMethod.Get, "http://blog-terencewaters-com.ibrave.host/wp-json/wp/v2/posts");
                 var response = await client.SendAsync(request);
 
+                // if we get a response, continue
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
@@ -100,6 +101,7 @@ namespace az_tw_me_wpblogJSON_CDN
 
                         var postJson = JsonSerializer.Serialize(post);
                         await blobClient.UploadAsync(new BinaryData(postJson));
+                        _logger.LogInformation($"Post with ID {post.Id} uploaded to blob storage.");
                     }
                 }
                 else

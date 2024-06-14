@@ -1,13 +1,11 @@
-using System;
-using System.Net.Http;
 using System.Text.Json;
+using System.IO;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using Microsoft.Azure.WebJobs;
 using Azure.Storage.Blobs;
-using Azure;
 
 namespace az_tw_me_wpblogJSON_CDN
 {
@@ -57,13 +55,14 @@ namespace az_tw_me_wpblogJSON_CDN
         private readonly ILogger _logger;
         private static readonly HttpClient client = new HttpClient();
 
-        public WPBlogTimerJSON(ILoggerFactory loggerFactory)
+        public WPBlogTimerJSON(ILogger<WPBlogTimerJSON> logger)
         {
-            _logger = loggerFactory.CreateLogger<WPBlogTimerJSON>();
+            _logger = logger;
         }
 
-        [Function("WPBlogTimerJSON")]
-        public async Task Run([TimerTrigger("0 0 */2 * * *")] MyInfo myTimer)
+        [Microsoft.Azure.WebJobs.FunctionName("WPBlogTimerJSON")]
+
+        public async Task Run([Microsoft.Azure.WebJobs.TimerTriggerAttribute("0 0 */2 * * *")] TimerInfo myTimer)
         {
             _logger.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
             _logger.LogInformation($"Next timer schedule at: {myTimer.ScheduleStatus.Next}");
@@ -96,12 +95,24 @@ namespace az_tw_me_wpblogJSON_CDN
                         // Check if the blob already exists
                         if (await blobClient.ExistsAsync())
                         {
-                            _logger.LogInformation($"Post with ID {post.Id} already exists in blob storage. Skipping...");
-                            continue;
+                            // Download the existing blob
+                            var existingBlob = await blobClient.DownloadAsync();
+                            using (var reader = new StreamReader(existingBlob.Value.Content))
+                            {
+                                var existingPostJson = await reader.ReadToEndAsync();
+                                var existingPost = JsonSerializer.Deserialize<Post>(existingPostJson);
+
+                                // Compare the existing post with the current post
+                                if (existingPost.Equals(post))
+                                {
+                                    _logger.LogInformation($"Post with ID {post.Id} is the same in blob storage. Skipping...");
+                                    continue;
+                                }
+                            }
                         }
 
                         var postJson = JsonSerializer.Serialize(post);
-                        await blobClient.UploadAsync(new BinaryData(postJson));
+                        await blobClient.UploadAsync(new BinaryData(postJson), overwrite: true);
                         _logger.LogInformation($"Post with ID {post.Id} uploaded to blob storage.");
                     }
                 }
